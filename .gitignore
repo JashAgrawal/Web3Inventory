@@ -1,1 +1,3 @@
 /node_modules
+/client/invoice/node_modules
+/client/invoice/.env

@@ -3,29 +3,31 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
 contract Invoice is ConfirmedOwner(msg.sender) {
   using SafeMath for uint256;
-  using SafeMath for uint32;
   enum paymentStatuses{ PENDING, PAID }
     struct Invoice {
         uint invoiceId;
         string buyerPAN;
         string sellerPAN;
-        uint32 invoiceAmount;
+        uint256 invoiceAmount;
         uint256 invoiceDate;
-        uint32 invoiceNo;
+        uint256 invoiceNo;
         paymentStatuses paymentStatus;
     }
     uint randNonce = 0;
     mapping(uint => Invoice) public invoiceIdtoInvoice;
     mapping(string => uint) public buyerPANCount;
     Invoice[] public Invoices;
+    event newUserAdded(uint invoiceId);
     //create an invoice
-    function _invoiceCreation(string memory _buyerPAN,string memory _sellerPAN,uint32 _invoiceAmount) external onlyOwner returns(uint) {
+    function _invoiceCreation(string memory _buyerPAN,string memory _sellerPAN,uint256 _invoiceAmount) external onlyOwner returns(uint) {
         uint newGenratedInvoiceId = _genratePseudoRandomInvoiceId(_buyerPAN,_sellerPAN,_invoiceAmount);
-        uint32 newGenratedinvoiceNo = uint32(Invoices.length);
+        uint256 newGenratedinvoiceNo = uint256(Invoices.length);
         Invoice memory newInvoice = Invoice(newGenratedInvoiceId,_buyerPAN,_sellerPAN,_invoiceAmount,block.timestamp,newGenratedinvoiceNo,paymentStatuses.PENDING);
         invoiceIdtoInvoice[newGenratedInvoiceId] = newInvoice;
         buyerPANCount[_buyerPAN]++;
         Invoices.push(newInvoice);
+        emit newUserAdded(newGenratedInvoiceId);
+        return newGenratedInvoiceId;
     }
     //get state of payment for invoiceId
     function getPaymentStatus(uint _invoiceId) external view returns(paymentStatuses){
@@ -55,7 +57,7 @@ contract Invoice is ConfirmedOwner(msg.sender) {
         return result;
     }
     //for genrating pseudoRandom nos (used in this project)
-    function _genratePseudoRandomInvoiceId(string memory _buyerPAN,string memory _sellerPAN,uint32 _invoiceAmount) private returns(uint){
+    function _genratePseudoRandomInvoiceId(string memory _buyerPAN,string memory _sellerPAN,uint256 _invoiceAmount) private returns(uint){
         randNonce++; 
         return uint(keccak256(abi.encodePacked( _buyerPAN,
                                                 _sellerPAN,
